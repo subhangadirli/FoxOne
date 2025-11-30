@@ -1,0 +1,112 @@
+{
+  "policies": {
+    "DisableAppUpdate": false,
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisablePocket": true,
+    "DisableFirefoxAccounts": false,
+    "DisableSetDesktopBackground": false,
+    "DisplayBookmarksToolbar": "newtab",
+    "DisplayMenuBar": "default-off",
+    "DNSOverHTTPS": {
+      "Enabled": true,
+      "Locked": false
+    },
+    "DontCheckDefaultBrowser": true,
+    "EnableTrackingProtection": {
+      "Value": true,
+      "Locked": false,
+      "Cryptomining": true,
+      "Fingerprinting": true
+    },
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "installation_mode": "normal_installed",
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/addon-607454-latest.xpi",
+        "default_area": "navbar"
+      },
+      "addon@darkreader.org": {
+        "installation_mode": "normal_installed",
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/darkreader/addon-945262-latest.xpi",
+        "default_area": "navbar"
+      }
+    },
+    "ExtensionUpdate": true,
+    "FirefoxHome": {
+      "Search": true,
+      "TopSites": true,
+      "SponsoredTopSites": false,
+      "Highlights": true,
+      "Pocket": false,
+      "SponsoredPocket": false,
+      "Snippets": false,
+      "Locked": false
+    },
+    "HardwareAcceleration": true,
+    "Homepage": {
+      "URL": "about:home",
+      "Locked": false,
+      "StartPage": "homepage"
+    },
+    "NetworkPrediction": true,
+    "NewTabPage": true,
+    "NoDefaultBookmarks": false,
+    "OfferToSaveLogins": true,
+    "OfferToSaveLoginsDefault": true,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "PasswordManagerEnabled": true,
+    "Permissions": {
+      "Autoplay": {
+        "Default": "block-audio-video"
+      }
+    },
+    "PictureInPicture": {
+      "Enabled": true,
+      "Locked": false
+    },
+    "PopupBlocking": {
+      "Default": true,
+      "Locked": false
+    },
+    "Preferences": {
+      "browser.tabs.warnOnClose": {
+        "Value": true,
+        "Status": "default"
+      },
+      "toolkit.legacyUserProfileCustomizations.stylesheets": {
+        "Value": true,
+        "Status": "locked"
+      },
+      "svg.context-properties.content.enabled": {
+        "Value": true,
+        "Status": "locked"
+      },
+      "layout.css.color-mix.enabled": {
+        "Value": true,
+        "Status": "locked"
+      },
+      "layout.css.backdrop-filter.enabled": {
+        "Value": true,
+        "Status": "locked"
+      }
+    },
+    "PromptForDownloadLocation": false,
+    "SanitizeOnShutdown": false,
+    "SearchBar": "unified",
+    "SearchEngines": {
+      "PreventInstalls": false
+    },
+    "SearchSuggestEnabled": true,
+    "ShowHomeButton": true,
+    "TranslateEnabled": true,
+    "UserMessaging": {
+      "WhatsNew": false,
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "UrlbarInterventions": false,
+      "SkipOnboarding": true,
+      "MoreFromMozilla": false
+    }
+  }
+}

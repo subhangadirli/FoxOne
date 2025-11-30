@@ -1,0 +1,98 @@
+name: Build macOS
+
+on:
+  workflow_call:
+    inputs:
+      firefox_version:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-13
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew install mercurial python@3.11 node yasm nasm autoconf@2.13 gnu-tar wget
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          rustup default stable
+
+      - name: Install cbindgen
+        run: |
+          source "$HOME/.cargo/env"
+          cargo install cbindgen
+
+      - name: Fetch Firefox source
+        run: |
+          chmod +x build-scripts/fetch-firefox-source.sh
+          ./build-scripts/fetch-firefox-source.sh "${{ inputs.firefox_version }}"
+
+      - name: Apply FoxOne branding
+        run: |
+          chmod +x build-scripts/apply-branding.sh
+          ./build-scripts/apply-branding.sh
+
+      - name: Apply Firefox One theme
+        run: |
+          chmod +x build-scripts/apply-theme.sh
+          ./build-scripts/apply-theme.sh
+
+      - name: Download extensions
+        run: |
+          chmod +x build-scripts/download-extensions.sh
+          ./build-scripts/download-extensions.sh
+
+      - name: Setup distribution
+        run: |
+          chmod +x build-scripts/setup-distribution.sh
+          ./build-scripts/setup-distribution.sh
+
+      - name: Copy mozconfig
+        run: |
+          cp config/mozconfig.macos mozilla-unified/mozconfig
+
+      - name: Build FoxOne
+        run: |
+          source "$HOME/.cargo/env"
+          cd mozilla-unified
+          ./mach build
+
+      - name: Package FoxOne
+        run: |
+          source "$HOME/.cargo/env"
+          cd mozilla-unified
+          ./mach package
+
+      - name: Create DMG
+        run: |
+          mkdir -p build
+          OBJ_DIR=$(find mozilla-unified -maxdepth 1 -type d -name "obj-*" | head -1)
+          if [ -d "${OBJ_DIR}/dist/FoxOne.app" ]; then
+            APP_PATH="${OBJ_DIR}/dist/FoxOne.app"
+          elif [ -d "${OBJ_DIR}/dist/Firefox.app" ]; then
+            mv "${OBJ_DIR}/dist/Firefox.app" "${OBJ_DIR}/dist/FoxOne.app"
+            APP_PATH="${OBJ_DIR}/dist/FoxOne.app"
+          else
+            echo "Could not find app bundle"
+            exit 1
+          fi
+          
+          # Create DMG
+          hdiutil create -volname "FoxOne" -srcfolder "${APP_PATH}" -ov -format UDZO "build/FoxOne-${{ inputs.firefox_version }}-macos.dmg"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: foxone-macos
+          path: build/FoxOne-*.dmg
+          retention-days: 7
