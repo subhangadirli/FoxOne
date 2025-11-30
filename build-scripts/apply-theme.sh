@@ -7,7 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 THEME_DIR="${REPO_ROOT}/theme"
-SOURCE_DIR="${REPO_ROOT}/mozilla-unified"
+SOURCE_DIR="${REPO_ROOT}/build/firefox-source"
 
 echo "Cloning Firefox One theme..."
 

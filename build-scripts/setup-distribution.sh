@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-SOURCE_DIR="${REPO_ROOT}/mozilla-unified"
+SOURCE_DIR="${REPO_ROOT}/build/firefox-source"
 DIST_DIR="${REPO_ROOT}/distribution"
 
 echo "Setting up distribution folder..."

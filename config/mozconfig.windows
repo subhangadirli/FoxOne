@@ -1,35 +1,26 @@
 # FoxOne Windows mozconfig
 
 # Build options
-ac_add_options --enable-application=browser
-ac_add_options --with-branding=browser/branding/foxone
-ac_add_options --enable-official-branding
 ac_add_options --enable-release
 ac_add_options --enable-optimize
 ac_add_options --disable-debug
+ac_add_options --disable-debug-symbols
+ac_add_options --with-branding=browser/branding/FoxOne
+ac_add_options --with-app-name=foxone
+ac_add_options --with-app-basename=FoxOne
+ac_add_options --with-distribution-id=org.foxone
+ac_add_options --disable-updater
+ac_add_options --disable-crashreporter
 ac_add_options --disable-tests
+ac_add_options --enable-application=browser
 
 # Windows specific
 ac_add_options --target=x86_64-pc-windows-msvc
 
-# LTO for optimized build
-ac_add_options --enable-lto=cross
-
-# Enable features
-ac_add_options --enable-av1
-ac_add_options --enable-eme=widevine
-
-# Distribution configuration
-ac_add_options --with-distribution-id=org.foxone
-mk_add_options MOZ_DISTRIBUTION_ID=org.foxone
-
-# Disable telemetry and crash reporting
-ac_add_options --disable-crashreporter
-ac_add_options --disable-telemetry
-
-# Enable updater
-ac_add_options --enable-updater
-ac_add_options --enable-update-channel=release
+# Disable telemetry and signing requirements
+export MOZ_REQUIRE_SIGNING=0
+export MOZ_TELEMETRY_REPORTING=0
 
 # Object directory
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-foxone-windows
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-foxone
+mk_add_options AUTOCLOBBER=1
