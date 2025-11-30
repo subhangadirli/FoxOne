@@ -82,10 +82,15 @@ cp "${APPDIR}/foxone.desktop" "${APPDIR}/usr/share/applications/"
 if [ -f "${PACKAGE_DIR}/browser/chrome/icons/default/default128.png" ]; then
     cp "${PACKAGE_DIR}/browser/chrome/icons/default/default128.png" "${APPDIR}/foxone.png"
     cp "${PACKAGE_DIR}/browser/chrome/icons/default/default128.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/foxone.png"
+elif [ -f "${PACKAGE_DIR}/browser/chrome/icons/default/default64.png" ]; then
+    # Try 64px icon as fallback
+    cp "${PACKAGE_DIR}/browser/chrome/icons/default/default64.png" "${APPDIR}/foxone.png"
+    cp "${PACKAGE_DIR}/browser/chrome/icons/default/default64.png" "${APPDIR}/usr/share/icons/hicolor/128x128/apps/foxone.png"
 else
-    # Create a placeholder icon
-    echo "Creating placeholder icon..."
-    convert -size 128x128 xc:orange -fill white -gravity center -pointsize 48 -annotate 0 "F1" "${APPDIR}/foxone.png" 2>/dev/null || true
+    # Create a simple placeholder icon using printf (no external dependencies)
+    echo "Creating placeholder icon (no browser icon found)..."
+    # Create a minimal 1x1 PNG as placeholder - AppImage will still work without icon
+    printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xcf\xc0\x00\x00\x00\x03\x00\x01\x00\x05\xfe\xd4\x00\x00\x00\x00IEND\xaeB`\x82' > "${APPDIR}/foxone.png" || true
 fi
 
 # Create AppRun script

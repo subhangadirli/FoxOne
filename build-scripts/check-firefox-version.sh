@@ -14,8 +14,14 @@ if [ -z "$RESPONSE" ]; then
     exit 1
 fi
 
-# Extract the latest stable version
-LATEST_VERSION=$(echo "$RESPONSE" | grep -o '"LATEST_FIREFOX_VERSION":"[^"]*"' | cut -d'"' -f4)
+# Extract the latest stable version using jq if available, otherwise fallback to grep/cut
+if command -v jq &> /dev/null; then
+    LATEST_VERSION=$(echo "$RESPONSE" | jq -r '.LATEST_FIREFOX_VERSION // empty')
+else
+    # Fallback to grep/cut for environments without jq
+    # This pattern matches the JSON key-value pair for LATEST_FIREFOX_VERSION
+    LATEST_VERSION=$(echo "$RESPONSE" | grep -o '"LATEST_FIREFOX_VERSION":"[^"]*"' | cut -d'"' -f4)
+fi
 
 if [ -z "$LATEST_VERSION" ]; then
     echo "Error: Failed to parse Firefox version" >&2
