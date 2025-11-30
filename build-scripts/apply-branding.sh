@@ -18,12 +18,19 @@ if [[ ! -d "$SOURCE_DIR" ]]; then
 fi
 
 mkdir -p "$BRANDING_DEST"
-cp -r "${BRANDING_SRC}/"* "$BRANDING_DEST/" || true
+
+# Copy branding files if source exists
+if [[ -d "$BRANDING_SRC" ]]; then
+    cp -r "${BRANDING_SRC}/"* "$BRANDING_DEST/" 2>/dev/null || echo "Warning: Some branding files may not have been copied"
+else
+    echo "Warning: Branding source directory not found at $BRANDING_SRC"
+fi
 
 # Update confvars.sh if it exists
 if [[ -f "${SOURCE_DIR}/browser/confvars.sh" ]]; then
-    sed -i.bak 's/MOZ_APP_NAME=firefox/MOZ_APP_NAME=foxone/g' "${SOURCE_DIR}/browser/confvars.sh" || true
-    sed -i.bak 's/MOZ_APP_DISPLAYNAME=Firefox/MOZ_APP_DISPLAYNAME=FoxOne/g' "${SOURCE_DIR}/browser/confvars.sh" || true
+    sed -i.bak 's/MOZ_APP_NAME=firefox/MOZ_APP_NAME=foxone/g' "${SOURCE_DIR}/browser/confvars.sh"
+    sed -i.bak 's/MOZ_APP_DISPLAYNAME=Firefox/MOZ_APP_DISPLAYNAME=FoxOne/g' "${SOURCE_DIR}/browser/confvars.sh"
+    rm -f "${SOURCE_DIR}/browser/confvars.sh.bak"
 fi
 
 echo "Branding applied successfully"
