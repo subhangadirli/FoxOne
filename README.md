@@ -1,6 +1,6 @@
 <br />
 <div align="center">
-  <h1 align="center">Firefox One 🦊+</h1>
+  <h1 align="center">FoxOne 🦊+</h1>
 
   <p align="center">
     The power of Firefox, the aesthetics of Opera One.<br>
