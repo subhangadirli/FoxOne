@@ -13,80 +13,65 @@ permissions:
 jobs:
   build:
     runs-on: windows-2022
+    timeout-minutes: 420
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup MozillaBuild
-        run: |
-          $mozBuildUrl = "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe"
-          $mozBuildInstaller = "$env:TEMP\MozillaBuildSetup.exe"
-          Invoke-WebRequest -Uri $mozBuildUrl -OutFile $mozBuildInstaller
-          Start-Process -FilePath $mozBuildInstaller -ArgumentList "/S" -Wait
         shell: powershell
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" -OutFile "MozillaBuildSetup.exe"
+          Start-Process -FilePath ".\MozillaBuildSetup.exe" -ArgumentList "/S" -Wait -NoNewWindow
 
-      - name: Install Rust
-        run: |
-          Invoke-WebRequest -Uri "https://win.rustup.rs/x86_64" -OutFile "$env:TEMP\rustup-init.exe"
-          Start-Process -FilePath "$env:TEMP\rustup-init.exe" -ArgumentList "-y" -Wait
-        shell: powershell
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
 
       - name: Fetch Firefox source
-        shell: cmd
+        shell: bash
         run: |
-          C:\mozilla-build\start-shell.bat -c "cd /c/Users/runneradmin/work/FoxOne/FoxOne && chmod +x build-scripts/fetch-firefox-source.sh && ./build-scripts/fetch-firefox-source.sh ${{ inputs.firefox_version }}"
+          chmod +x build-scripts/*.sh
+          ./build-scripts/fetch-firefox-source.sh "${{ inputs.firefox_version }}"
 
       - name: Apply FoxOne branding
-        shell: cmd
-        run: |
-          C:\mozilla-build\start-shell.bat -c "cd /c/Users/runneradmin/work/FoxOne/FoxOne && chmod +x build-scripts/apply-branding.sh && ./build-scripts/apply-branding.sh"
+        shell: bash
+        run: ./build-scripts/apply-branding.sh
 
       - name: Apply Firefox One theme
-        shell: cmd
-        run: |
-          C:\mozilla-build\start-shell.bat -c "cd /c/Users/runneradmin/work/FoxOne/FoxOne && chmod +x build-scripts/apply-theme.sh && ./build-scripts/apply-theme.sh"
+        shell: bash
+        run: ./build-scripts/apply-theme.sh
 
       - name: Download extensions
-        shell: cmd
-        run: |
-          C:\mozilla-build\start-shell.bat -c "cd /c/Users/runneradmin/work/FoxOne/FoxOne && chmod +x build-scripts/download-extensions.sh && ./build-scripts/download-extensions.sh"
+        shell: bash
+        run: ./build-scripts/download-extensions.sh
 
       - name: Setup distribution
+        shell: bash
+        run: ./build-scripts/setup-distribution.sh
+
+      - name: Configure build
+        shell: bash
+        run: |
+          cp config/mozconfig.windows build/firefox-source/mozconfig
+          touch build/firefox-source/mozilla-api-key
+
+      - name: Build Firefox
         shell: cmd
         run: |
-          C:\mozilla-build\start-shell.bat -c "cd /c/Users/runneradmin/work/FoxOne/FoxOne && chmod +x build-scripts/setup-distribution.sh && ./build-scripts/setup-distribution.sh"
+          call "C:\mozilla-build\start-shell.bat" -here -c "cd build/firefox-source && ./mach bootstrap --application-choice=browser --no-interactive || true && ./mach build && ./mach package"
+        timeout-minutes: 360
 
-      - name: Copy mozconfig
-        shell: cmd
+      - name: Prepare output
+        shell: bash
         run: |
-          copy config\mozconfig.windows mozilla-unified\mozconfig
-
-      - name: Build FoxOne
-        shell: cmd
-        run: |
-          C:\mozilla-build\start-shell.bat -c "cd /c/Users/runneradmin/work/FoxOne/FoxOne/mozilla-unified && source ~/.cargo/env && ./mach build"
-
-      - name: Package FoxOne
-        shell: cmd
-        run: |
-          C:\mozilla-build\start-shell.bat -c "cd /c/Users/runneradmin/work/FoxOne/FoxOne/mozilla-unified && ./mach package"
-
-      - name: Create zip package
-        run: |
-          mkdir build
-          $objDir = Get-ChildItem -Path "mozilla-unified/obj-*" -Directory | Select-Object -First 1
-          $distDir = Join-Path $objDir.FullName "dist"
-          if (Test-Path "$distDir\firefox") {
-            Rename-Item "$distDir\firefox" "$distDir\foxone"
-            Compress-Archive -Path "$distDir\foxone" -DestinationPath "build\foxone-${{ inputs.firefox_version }}-windows-x64.zip"
-          } elseif (Test-Path "$distDir\bin") {
-            Compress-Archive -Path "$distDir\bin" -DestinationPath "build\foxone-${{ inputs.firefox_version }}-windows-x64.zip"
-          }
-        shell: powershell
+          mkdir -p build/output/windows
+          find build/firefox-source/obj-foxone -name "*.zip" -exec cp {} build/output/windows/ \; || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: foxone-windows
-          path: build/foxone-*.zip
+          path: build/output/windows/*.zip
+          if-no-files-found: warn
           retention-days: 7

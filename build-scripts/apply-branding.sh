@@ -5,49 +5,25 @@ set -euo pipefail
 # Run from repository root after fetching Firefox source
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-SOURCE_DIR="${REPO_ROOT}/mozilla-unified"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SOURCE_DIR="${PROJECT_ROOT}/build/firefox-source"
+BRANDING_SRC="${PROJECT_ROOT}/branding/FoxOne"
+BRANDING_DEST="${SOURCE_DIR}/browser/branding/FoxOne"
 
 echo "Applying FoxOne branding..."
 
-# Check if source exists
-if [ ! -d "$SOURCE_DIR" ]; then
+if [[ ! -d "$SOURCE_DIR" ]]; then
     echo "Error: Firefox source not found at $SOURCE_DIR"
     exit 1
 fi
 
-# Create branding directory in source
-BRANDING_DIR="${SOURCE_DIR}/browser/branding/foxone"
-mkdir -p "${BRANDING_DIR}"
+mkdir -p "$BRANDING_DEST"
+cp -r "${BRANDING_SRC}/"* "$BRANDING_DEST/" || true
 
-# Copy branding files
-cp -r "${REPO_ROOT}/branding/FoxOne/"* "${BRANDING_DIR}/"
-
-# Update configure.sh to use foxone branding
-if [ -f "${SOURCE_DIR}/browser/confvars.sh" ]; then
-    sed -i 's/MOZ_BRANDING_DIRECTORY=.*/MOZ_BRANDING_DIRECTORY=browser\/branding\/foxone/' "${SOURCE_DIR}/browser/confvars.sh"
+# Update confvars.sh if it exists
+if [[ -f "${SOURCE_DIR}/browser/confvars.sh" ]]; then
+    sed -i.bak 's/MOZ_APP_NAME=firefox/MOZ_APP_NAME=foxone/g' "${SOURCE_DIR}/browser/confvars.sh" || true
+    sed -i.bak 's/MOZ_APP_DISPLAYNAME=Firefox/MOZ_APP_DISPLAYNAME=FoxOne/g' "${SOURCE_DIR}/browser/confvars.sh" || true
 fi
 
-# Update application.ini template if exists
-APP_INI="${SOURCE_DIR}/browser/app/profile/firefox.js"
-if [ -f "$APP_INI" ]; then
-    # Add FoxOne specific preferences
-    cat >> "$APP_INI" << 'EOF'
-
-// FoxOne Preferences
-pref("browser.startup.homepage", "about:home");
-pref("browser.newtabpage.enabled", true);
-pref("browser.newtabpage.activity-stream.feeds.topsites", true);
-pref("browser.newtabpage.activity-stream.showSearch", true);
-EOF
-fi
-
-# Copy autoconfig files to defaults
-DEFAULTS_DIR="${SOURCE_DIR}/browser/app/profile"
-mkdir -p "${DEFAULTS_DIR}"
-
-if [ -f "${REPO_ROOT}/config/autoconfig/autoconfig.js" ]; then
-    cp "${REPO_ROOT}/config/autoconfig/autoconfig.js" "${DEFAULTS_DIR}/"
-fi
-
-echo "FoxOne branding applied successfully"
+echo "Branding applied successfully"

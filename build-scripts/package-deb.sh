@@ -14,7 +14,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-SOURCE_DIR="${REPO_ROOT}/mozilla-unified"
+SOURCE_DIR="${REPO_ROOT}/build/firefox-source"
 BUILD_DIR="${REPO_ROOT}/build"
 
 echo "Creating .deb package for FoxOne ${VERSION}..."

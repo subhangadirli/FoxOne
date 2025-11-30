@@ -15,8 +15,8 @@ fi
 echo "Fetching Firefox ${VERSION} source..."
 
 # Create working directory
-mkdir -p mozilla-unified
-cd mozilla-unified
+mkdir -p build/firefox-source
+cd build/firefox-source
 
 # Download Firefox source tarball
 TARBALL_URL="https://archive.mozilla.org/pub/firefox/releases/${VERSION}/source/firefox-${VERSION}.source.tar.xz"

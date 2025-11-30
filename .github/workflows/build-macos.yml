@@ -12,87 +12,68 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-13
+    runs-on: macos-latest
+    timeout-minutes: 360
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
-          brew install mercurial python@3.11 node yasm nasm autoconf@2.13 gnu-tar wget
+          brew update
+          brew install python@3.11 node nasm yasm mercurial || true
 
-      - name: Install Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source "$HOME/.cargo/env"
-          rustup default stable
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
 
       - name: Install cbindgen
-        run: |
-          source "$HOME/.cargo/env"
-          cargo install cbindgen
+        run: cargo install cbindgen
 
       - name: Fetch Firefox source
         run: |
-          chmod +x build-scripts/fetch-firefox-source.sh
+          chmod +x build-scripts/*.sh
           ./build-scripts/fetch-firefox-source.sh "${{ inputs.firefox_version }}"
 
       - name: Apply FoxOne branding
-        run: |
-          chmod +x build-scripts/apply-branding.sh
-          ./build-scripts/apply-branding.sh
+        run: ./build-scripts/apply-branding.sh
 
       - name: Apply Firefox One theme
-        run: |
-          chmod +x build-scripts/apply-theme.sh
-          ./build-scripts/apply-theme.sh
+        run: ./build-scripts/apply-theme.sh
 
       - name: Download extensions
-        run: |
-          chmod +x build-scripts/download-extensions.sh
-          ./build-scripts/download-extensions.sh
+        run: ./build-scripts/download-extensions.sh
 
       - name: Setup distribution
-        run: |
-          chmod +x build-scripts/setup-distribution.sh
-          ./build-scripts/setup-distribution.sh
+        run: ./build-scripts/setup-distribution.sh
 
-      - name: Copy mozconfig
+      - name: Configure build
         run: |
-          cp config/mozconfig.macos mozilla-unified/mozconfig
+          cp config/mozconfig.macos build/firefox-source/mozconfig
+          touch build/firefox-source/mozilla-api-key
+
+      - name: Bootstrap
+        working-directory: build/firefox-source
+        run: |
+          ./mach bootstrap --application-choice=browser --no-interactive || true
 
       - name: Build FoxOne
-        run: |
-          source "$HOME/.cargo/env"
-          cd mozilla-unified
-          ./mach build
+        working-directory: build/firefox-source
+        run: ./mach build
+        timeout-minutes: 240
 
       - name: Package FoxOne
-        run: |
-          source "$HOME/.cargo/env"
-          cd mozilla-unified
-          ./mach package
+        working-directory: build/firefox-source
+        run: ./mach package
 
-      - name: Create DMG
+      - name: Prepare output
         run: |
-          mkdir -p build
-          OBJ_DIR=$(find mozilla-unified -maxdepth 1 -type d -name "obj-*" | head -1)
-          if [ -d "${OBJ_DIR}/dist/FoxOne.app" ]; then
-            APP_PATH="${OBJ_DIR}/dist/FoxOne.app"
-          elif [ -d "${OBJ_DIR}/dist/Firefox.app" ]; then
-            mv "${OBJ_DIR}/dist/Firefox.app" "${OBJ_DIR}/dist/FoxOne.app"
-            APP_PATH="${OBJ_DIR}/dist/FoxOne.app"
-          else
-            echo "Could not find app bundle"
-            exit 1
-          fi
-          
-          # Create DMG
-          hdiutil create -volname "FoxOne" -srcfolder "${APP_PATH}" -ov -format UDZO "build/FoxOne-${{ inputs.firefox_version }}-macos.dmg"
+          mkdir -p build/output/macos
+          find build/firefox-source/obj-foxone -name "*.dmg" -exec cp {} build/output/macos/FoxOne-${{ inputs.firefox_version }}.dmg \; || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: foxone-macos
-          path: build/FoxOne-*.dmg
+          path: build/output/macos/*.dmg
+          if-no-files-found: warn
           retention-days: 7

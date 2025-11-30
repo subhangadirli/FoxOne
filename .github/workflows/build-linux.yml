@@ -13,16 +13,15 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 360
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Free disk space
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          sudo apt-get clean
           df -h
 
       - name: Install dependencies
@@ -30,103 +29,92 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
-            libgtk-3-dev \
-            libdbus-glib-1-dev \
-            libpulse-dev \
-            libasound2-dev \
-            libx11-xcb-dev \
-            libxt-dev \
-            nasm \
-            yasm \
-            zip \
-            unzip \
             python3 \
             python3-pip \
-            nodejs \
-            npm \
+            python3-dev \
             clang \
             llvm \
             lld \
-            libclang-dev \
-            wget \
+            nasm \
+            nodejs \
+            npm \
+            libgtk-3-dev \
+            libdbus-glib-1-dev \
+            libxt-dev \
+            libasound2-dev \
+            libpulse-dev \
             curl \
+            wget \
+            unzip \
+            jq \
             git \
             mercurial \
-            autoconf2.13 \
-            libffi-dev \
-            libssl-dev \
-            pkg-config \
             dpkg-dev \
             fakeroot \
-            desktop-file-utils \
             libfuse2 \
-            file
+            m4 \
+            autoconf2.13 \
+            zip \
+            libnotify-dev \
+            libcurl4-openssl-dev
 
-      - name: Install Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source "$HOME/.cargo/env"
-          rustup default stable
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
 
       - name: Install cbindgen
-        run: |
-          source "$HOME/.cargo/env"
-          cargo install cbindgen
+        run: cargo install cbindgen
 
       - name: Fetch Firefox source
         run: |
-          chmod +x build-scripts/fetch-firefox-source.sh
+          chmod +x build-scripts/*.sh
           ./build-scripts/fetch-firefox-source.sh "${{ inputs.firefox_version }}"
 
       - name: Apply FoxOne branding
-        run: |
-          chmod +x build-scripts/apply-branding.sh
-          ./build-scripts/apply-branding.sh
+        run: ./build-scripts/apply-branding.sh
 
       - name: Apply Firefox One theme
-        run: |
-          chmod +x build-scripts/apply-theme.sh
-          ./build-scripts/apply-theme.sh
+        run: ./build-scripts/apply-theme.sh
 
       - name: Download extensions
-        run: |
-          chmod +x build-scripts/download-extensions.sh
-          ./build-scripts/download-extensions.sh
+        run: ./build-scripts/download-extensions.sh
 
       - name: Setup distribution
-        run: |
-          chmod +x build-scripts/setup-distribution.sh
-          ./build-scripts/setup-distribution.sh
+        run: ./build-scripts/setup-distribution.sh
 
-      - name: Copy mozconfig
+      - name: Configure build
         run: |
-          cp config/mozconfig.linux mozilla-unified/mozconfig
+          cp config/mozconfig.linux build/firefox-source/mozconfig
+          touch build/firefox-source/mozilla-api-key
+
+      - name: Bootstrap
+        working-directory: build/firefox-source
+        run: |
+          ./mach bootstrap --application-choice=browser --no-interactive || true
 
       - name: Build FoxOne
-        run: |
-          chmod +x build-scripts/build-linux.sh
-          ./build-scripts/build-linux.sh
+        working-directory: build/firefox-source
+        run: ./mach build
+        timeout-minutes: 240
 
       - name: Package FoxOne
-        run: |
-          chmod +x build-scripts/package-linux.sh
-          ./build-scripts/package-linux.sh "${{ inputs.firefox_version }}"
+        working-directory: build/firefox-source
+        run: ./mach package
+
+      - name: Create packages
+        run: ./build-scripts/package-linux.sh "${{ inputs.firefox_version }}"
 
       - name: Create .deb package
-        run: |
-          chmod +x build-scripts/package-deb.sh
-          ./build-scripts/package-deb.sh "${{ inputs.firefox_version }}"
+        run: ./build-scripts/package-deb.sh "${{ inputs.firefox_version }}"
 
       - name: Create AppImage
-        run: |
-          chmod +x build-scripts/package-appimage.sh
-          ./build-scripts/package-appimage.sh "${{ inputs.firefox_version }}"
+        run: ./build-scripts/package-appimage.sh "${{ inputs.firefox_version }}"
 
       - name: Upload tar.bz2 artifact
         uses: actions/upload-artifact@v4
         with:
           name: foxone-linux-tar
           path: build/foxone-*.tar.bz2
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Upload .deb artifact
@@ -134,6 +122,7 @@ jobs:
         with:
           name: foxone-linux-deb
           path: build/foxone-*.deb
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Upload AppImage artifact
@@ -141,4 +130,5 @@ jobs:
         with:
           name: foxone-linux-appimage
           path: build/FoxOne-*.AppImage
+          if-no-files-found: warn
           retention-days: 7
