@@ -62,7 +62,7 @@ jobs:
             libcurl4-openssl-dev
 
       - name: Setup Rust
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install cbindgen
         run: cargo install cbindgen
