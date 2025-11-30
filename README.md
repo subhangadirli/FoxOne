@@ -1,6 +1,6 @@
 <br />
 <div align="center">
-  <h1 align="center">FoxOne 🦊+</h1>
+  <h1 align="center">Firefox One 🦊+</h1>
 
   <p align="center">
     The power of Firefox, the aesthetics of Opera One.<br>
@@ -17,10 +17,10 @@
 
 <div align="center">
 
-[![License](https://img.shields.io/github/license/Godiesc/firefox-one?style=flat-square&color=blue)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/Godiesc/firefox-one?style=flat-square&color=yellow)](https://github.com/Godiesc/firefox-one/stargazers)
-[![Last Commit](https://img.shields.io/github/last-commit/Godiesc/firefox-one?style=flat-square)](https://github.com/Godiesc/firefox-one/commits/main)
-[![Firefox](https://img.shields.io/badge/Firefox-115%2B-FF7139?style=flat-square&logo=firefox-browser)](https://www.mozilla.org/firefox/new/)
+[![License](https://img.shields.io/github/license/subhangadirli/FoxOne?style=flat-square&color=blue)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/subhangadirli/FoxOne?style=flat-square&color=yellow)](https://github.com/Godiesc/firefox-one/stargazers)
+[![Last Commit](https://img.shields.io/github/last-commit/subhangadirli/FoxOne?style=flat-square)](https://github.com/Godiesc/firefox-one/commits/main)
+[![Firefox](https://img.shields.io/badge/Firefox-145%2B-FF7139?style=flat-square&logo=firefox-browser)](https://www.mozilla.org/firefox/new/)
 
 </div>
 
