@@ -1,6 +1,32 @@
-# FoxOne Browser
+<br />
+<div align="center">
+  <h1 align="center">Firefox One 🦊+</h1>
 
-FoxOne is a customized Firefox build that combines the sleek Firefox One theme with privacy-focused extensions and sensible defaults.
+  <p align="center">
+    The power of Firefox, the aesthetics of Opera One.<br>
+    A modern, fluid, and fully customizable interface.
+    <br />
+    <br />
+    <a href="https://github.com/Godiesc/firefox-one/releases"><strong>📥 Download Latest Version</strong></a>
+    ·
+    <a href="https://github.com/Godiesc/firefox-one/issues">Report Bug</a>
+    ·
+    <a href="#-Screenshots">View Screenshots</a>
+  </p>
+</div>
+
+<div align="center">
+
+[![License](https://img.shields.io/github/license/Godiesc/firefox-one?style=flat-square&color=blue)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/Godiesc/firefox-one?style=flat-square&color=yellow)](https://github.com/Godiesc/firefox-one/stargazers)
+[![Last Commit](https://img.shields.io/github/last-commit/Godiesc/firefox-one?style=flat-square)](https://github.com/Godiesc/firefox-one/commits/main)
+[![Firefox](https://img.shields.io/badge/Firefox-115%2B-FF7139?style=flat-square&logo=firefox-browser)](https://www.mozilla.org/firefox/new/)
+
+</div>
+
+---
+## Preview
+![Preview](https://raw.githubusercontent.com/subhangadirli/FoxOne/refs/heads/main/branding/FoxOne/content/preview.png)
 
 ## Features
 
