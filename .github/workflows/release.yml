@@ -1,0 +1,129 @@
+name: FoxOne Release
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday at midnight UTC
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build even if no new Firefox version'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      firefox_version: ${{ steps.check.outputs.firefox_version }}
+      should_build: ${{ steps.check.outputs.should_build }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new Firefox version
+        id: check
+        run: |
+          chmod +x build-scripts/check-firefox-version.sh
+          FIREFOX_VERSION=$(./build-scripts/check-firefox-version.sh)
+          echo "firefox_version=${FIREFOX_VERSION}" >> $GITHUB_OUTPUT
+          
+          # Check if tag already exists
+          if git tag -l "FoxOne-v${FIREFOX_VERSION}" | grep -q .; then
+            if [ "${{ github.event.inputs.force_build }}" == "true" ]; then
+              echo "Force build enabled, building anyway"
+              echo "should_build=true" >> $GITHUB_OUTPUT
+            else
+              echo "Tag FoxOne-v${FIREFOX_VERSION} already exists, skipping build"
+              echo "should_build=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "New version ${FIREFOX_VERSION} detected, building"
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          fi
+
+  build-linux:
+    needs: check-version
+    if: needs.check-version.outputs.should_build == 'true'
+    uses: ./.github/workflows/build-linux.yml
+    with:
+      firefox_version: ${{ needs.check-version.outputs.firefox_version }}
+    secrets: inherit
+
+  build-windows:
+    needs: check-version
+    if: needs.check-version.outputs.should_build == 'true'
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      firefox_version: ${{ needs.check-version.outputs.firefox_version }}
+    secrets: inherit
+
+  build-macos:
+    needs: check-version
+    if: needs.check-version.outputs.should_build == 'true'
+    uses: ./.github/workflows/build-macos.yml
+    with:
+      firefox_version: ${{ needs.check-version.outputs.firefox_version }}
+    secrets: inherit
+
+  create-release:
+    needs: [check-version, build-linux, build-windows, build-macos]
+    if: needs.check-version.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: find artifacts -type f | head -50
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: FoxOne-v${{ needs.check-version.outputs.firefox_version }}
+          name: FoxOne v${{ needs.check-version.outputs.firefox_version }}
+          body: |
+            ## FoxOne v${{ needs.check-version.outputs.firefox_version }}
+            
+            Based on Firefox ${{ needs.check-version.outputs.firefox_version }}
+            
+            ### Features
+            - Firefox One theme by Godiesc
+            - uBlock Origin (enabled by default)
+            - Dark Reader (disabled by default)
+            - Full Mozilla Account compatibility
+            
+            ### Downloads
+            - **Linux**: .tar.bz2, .deb, .AppImage
+            - **Windows**: .zip
+            - **macOS**: .dmg
+            
+            ### Installation
+            See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for installation instructions.
+          files: |
+            artifacts/**/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update VERSION file
+        run: |
+          echo "${{ needs.check-version.outputs.firefox_version }}" > VERSION
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "Update VERSION to ${{ needs.check-version.outputs.firefox_version }}" || true
+          git push || true

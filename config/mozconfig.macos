@@ -1,0 +1,36 @@
+# FoxOne macOS mozconfig
+
+# Build options
+ac_add_options --enable-application=browser
+ac_add_options --with-branding=browser/branding/foxone
+ac_add_options --enable-official-branding
+ac_add_options --enable-release
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+
+# macOS specific
+ac_add_options --target=x86_64-apple-darwin
+ac_add_options --enable-default-toolkit=cairo-cocoa
+
+# LTO for optimized build
+ac_add_options --enable-lto=cross
+
+# Enable features
+ac_add_options --enable-av1
+ac_add_options --enable-eme=widevine
+
+# Distribution configuration
+ac_add_options --with-distribution-id=org.foxone
+mk_add_options MOZ_DISTRIBUTION_ID=org.foxone
+
+# Disable telemetry and crash reporting
+ac_add_options --disable-crashreporter
+ac_add_options --disable-telemetry
+
+# Enable updater
+ac_add_options --enable-updater
+ac_add_options --enable-update-channel=release
+
+# Object directory
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-foxone-macos
